@@ -133,37 +133,10 @@ metric_card(c4, "Top Competitor Mentioned",  top_comp_name,       f"{top_comp_co
 st.divider()
 
 # ── Sidebar filters ───────────────────────────────────────────────────────────
-# Score bucket boundaries
-SCORE_BUCKETS = {
-    "⭐ High  (7.5 – 10)":  (7.5, 10.0),
-    "🟡 Mid   (5.0 – 7.4)": (5.0, 7.49),
-    "🔵 Low   (1.0 – 4.9)": (1.0, 4.99),
-}
-
-# Days-active bucket boundaries
-DAYS_BUCKETS = {
-    "< 7 days (hot window)": (0,  6),
-    "7 – 30 days":           (7,  30),
-    "31 – 60 days":          (31, 60),
-    "60+ days":              (61, 9999),
-}
-
-# Post-count bucket boundaries
-POSTS_BUCKETS = {
-    "1 post":      (1, 1),
-    "2 posts":     (2, 2),
-    "3+ posts 🔥": (3, 9999),
-}
-
-# Flag labels → column / condition
-FLAG_LABELS = {
-    "🟢 Hot this week":    "any_recent",
-    "🔥 3+ comments":      "escalating",
-    "✉️ Has outreach draft": "__has_draft__",
-}
-
 with st.sidebar:
     st.header("🔍 Filters")
+
+    st.subheader("Lead Quality")
 
     tier_filter = st.multiselect(
         "Lead Tier",
@@ -172,11 +145,23 @@ with st.sidebar:
         format_func=lambda t: f"{TIER_EMOJI.get(t, '')} {t.capitalize()}",
     )
 
-    score_bucket_filter = st.multiselect(
-        "Score Band",
-        options=list(SCORE_BUCKETS.keys()),
-        default=list(SCORE_BUCKETS.keys()),
+    score_min = st.slider(
+        "Min Best Score",
+        min_value=1.0, max_value=10.0, value=1.0, step=0.5,
+        help="Only show leads whose best comment scored at least this high",
     )
+    score_max = 10.0
+
+    max_days = int(leads_df["days_suffering"].max()) if len(leads_df) else 90
+    days_min, days_max = st.slider(
+        "Days Active (days since first post)",
+        min_value=0, max_value=max_days,
+        value=(0, max_days),
+        help="How long the lead has been publicly complaining",
+    )
+
+    st.divider()
+    st.subheader("Competitor & Pain Point")
 
     competitor_options = sorted(
         [c for c in leads_df["competitor_mentioned"].dropna().unique() if c != "none"]
@@ -194,6 +179,9 @@ with st.sidebar:
         default=pain_options,
     )
 
+    st.divider()
+    st.subheader("Lead Type & Activity")
+
     type_options = sorted(leads_df["lead_type"].dropna().unique().tolist())
     type_filter = st.multiselect(
         "Lead Type",
@@ -201,64 +189,58 @@ with st.sidebar:
         default=type_options,
     )
 
-    posts_filter = st.multiselect(
-        "Number of Posts",
-        options=list(POSTS_BUCKETS.keys()),
-        default=list(POSTS_BUCKETS.keys()),
+    min_comments = st.slider(
+        "Min Number of Posts",
+        min_value=1, max_value=int(leads_df["total_comments"].max()) if len(leads_df) else 4,
+        value=1, step=1,
+        help="Only show leads with at least this many posts",
     )
 
-    days_filter = st.multiselect(
-        "Days Active",
-        options=list(DAYS_BUCKETS.keys()),
-        default=list(DAYS_BUCKETS.keys()),
-    )
+    st.divider()
+    st.subheader("Quick Filters")
 
-    flags_filter = st.multiselect(
-        "Flags",
-        options=list(FLAG_LABELS.keys()),
-        default=[],
-        help="Select one or more flags — leads must match ALL selected flags",
+    recent_only = st.checkbox(
+        "🟢 Hot this week only",
+        value=False,
+        help="Leads with at least one comment in the last 7 days",
+    )
+    escalating_only = st.checkbox(
+        "🔥 3+ comments only",
+        value=False,
+        help="Show only leads who have escalated to 3 or more posts",
+    )
+    has_outreach = st.checkbox(
+        "✉️ Has outreach draft",
+        value=False,
+        help="Leads where an outreach message has been generated",
     )
 
     st.divider()
     if st.button("Reset all filters", use_container_width=True):
         st.rerun()
 
-
 # ── Apply filters ─────────────────────────────────────────────────────────────
-# Score band
-selected_score_ranges = [SCORE_BUCKETS[b] for b in score_bucket_filter] if score_bucket_filter else list(SCORE_BUCKETS.values())
-def _in_score_ranges(score):
-    return any(lo <= score <= hi for lo, hi in selected_score_ranges)
-
-# Days active band
-selected_days_ranges = [DAYS_BUCKETS[b] for b in days_filter] if days_filter else list(DAYS_BUCKETS.values())
-def _in_days_ranges(days):
-    return any(lo <= days <= hi for lo, hi in selected_days_ranges)
-
-# Posts band
-selected_posts_ranges = [POSTS_BUCKETS[b] for b in posts_filter] if posts_filter else list(POSTS_BUCKETS.values())
-def _in_posts_ranges(posts):
-    return any(lo <= posts <= hi for lo, hi in selected_posts_ranges)
-
 filtered = leads_df[
     leads_df["lead_tier"].isin(tier_filter) &
     leads_df["competitor_mentioned"].isin(competitor_filter) &
     leads_df["pain_point_category"].isin(pain_filter) &
     leads_df["lead_type"].isin(type_filter) &
-    leads_df["best_score"].apply(_in_score_ranges) &
-    leads_df["total_comments"].apply(_in_posts_ranges) &
-    leads_df["days_suffering"].apply(_in_days_ranges)
+    (leads_df["best_score"] >= score_min) &
+    (leads_df["best_score"] <= score_max) &
+    (leads_df["total_comments"] >= min_comments) &
+    (leads_df["days_suffering"] >= days_min) &
+    (leads_df["days_suffering"] <= days_max)
 ].copy()
 
-# Flags (AND logic — lead must satisfy every selected flag)
-if "🟢 Hot this week" in flags_filter:
+if recent_only:
     filtered = filtered[filtered["any_recent"] == True]
-if "🔥 3+ comments" in flags_filter:
+if escalating_only:
     filtered = filtered[filtered["escalating"] == True]
-if "✉️ Has outreach draft" in flags_filter:
+if has_outreach:
+    # Join back to raw_df to check if the best-scoring comment has a draft
     lead_drafts = (
-        raw_df[raw_df["outreach_draft"].astype(str).str.strip() != ""]["lead_id"].unique()
+        raw_df[raw_df["outreach_draft"].astype(str).str.strip() != ""]
+        ["lead_id"].unique()
     )
     filtered = filtered[filtered["lead_id"].isin(lead_drafts)]
 
