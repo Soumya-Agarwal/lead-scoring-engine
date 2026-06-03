@@ -145,12 +145,12 @@ with st.sidebar:
         format_func=lambda t: f"{TIER_EMOJI.get(t, '')} {t.capitalize()}",
     )
 
-    score_min, score_max = st.slider(
-        "Best Score Range",
-        min_value=0.0, max_value=10.0,
-        value=(1.0, 10.0), step=0.5,
-        help="Filter by the lead's highest composite score",
+    score_min = st.slider(
+        "Min Best Score",
+        min_value=1.0, max_value=10.0, value=1.0, step=0.5,
+        help="Only show leads whose best comment scored at least this high",
     )
+    score_max = 10.0
 
     max_days = int(leads_df["days_suffering"].max()) if len(leads_df) else 90
     days_min, days_max = st.slider(
