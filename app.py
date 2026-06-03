@@ -145,13 +145,6 @@ with st.sidebar:
         format_func=lambda t: f"{TIER_EMOJI.get(t, '')} {t.capitalize()}",
     )
 
-    score_min = st.slider(
-        "Min Best Score",
-        min_value=1.0, max_value=10.0, value=1.0, step=0.5,
-        help="Only show leads whose best comment scored at least this high",
-    )
-    score_max = 10.0
-
     max_days = int(leads_df["days_suffering"].max()) if len(leads_df) else 90
     days_min, days_max = st.slider(
         "Days Active (days since first post)",
@@ -225,8 +218,6 @@ filtered = leads_df[
     leads_df["competitor_mentioned"].isin(competitor_filter) &
     leads_df["pain_point_category"].isin(pain_filter) &
     leads_df["lead_type"].isin(type_filter) &
-    (leads_df["best_score"] >= score_min) &
-    (leads_df["best_score"] <= score_max) &
     (leads_df["total_comments"] >= min_comments) &
     (leads_df["days_suffering"] >= days_min) &
     (leads_df["days_suffering"] <= days_max)
