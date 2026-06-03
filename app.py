@@ -360,11 +360,11 @@ if selected_rows:
 
     # ── Lead summary bar ─────────────────────────────────────────────────────
     s1, s2, s3, s4, s5 = st.columns(5)
-    s1.metric("Best Score",      f"{lead_row['best_score']:.2f}")
-    s2.metric("Total Posts",     f"{int(lead_row['total_comments'])}" + (" 🔥" if lead_row["escalating"] else ""))
-    s3.metric("Competitor",      lead_row["competitor_mentioned"])
-    s4.metric("Pain Point",      lead_row["pain_point_category"])
-    s5.metric("Days Active",     f"{int(lead_row['days_suffering'])} days")
+    metric_card(s1, "Best Score ⭐",  f"{lead_row['best_score']:.2f}")
+    metric_card(s2, "Total Posts",    str(int(lead_row['total_comments'])) + (" 🔥" if lead_row["escalating"] else ""))
+    metric_card(s3, "Competitor",     lead_row["competitor_mentioned"])
+    metric_card(s4, "Pain Point",     lead_row["pain_point_category"])
+    metric_card(s5, "Days Active",    f"{int(lead_row['days_suffering'])} days")
 
     st.divider()
     left, right = st.columns([1, 1])
