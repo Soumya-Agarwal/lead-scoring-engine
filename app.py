@@ -206,12 +206,6 @@ with st.sidebar:
         value=False,
         help="Show only leads who have escalated to 3 or more posts",
     )
-    has_outreach = st.checkbox(
-        "✉️ Has outreach draft",
-        value=False,
-        help="Leads where an outreach message has been generated",
-    )
-
     st.divider()
     if st.button("Reset all filters", use_container_width=True):
         st.rerun()
@@ -231,13 +225,6 @@ if recent_only:
     filtered = filtered[filtered["any_recent"] == True]
 if escalating_only:
     filtered = filtered[filtered["escalating"] == True]
-if has_outreach:
-    # Join back to raw_df to check if the best-scoring comment has a draft
-    lead_drafts = (
-        raw_df[raw_df["outreach_draft"].astype(str).str.strip() != ""]
-        ["lead_id"].unique()
-    )
-    filtered = filtered[filtered["lead_id"].isin(lead_drafts)]
 
 st.markdown(f"**{len(filtered)} leads** match your filters")
 
