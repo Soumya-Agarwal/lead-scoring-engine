@@ -193,6 +193,70 @@ if escalating_only:
 
 st.markdown(f"**{len(filtered)} leads** match your filters")
 
+# ── Competitor breakdown ──────────────────────────────────────────────────────
+with st.expander("📊 Competitor Breakdown", expanded=True):
+    comp_signal = raw_df[
+        (raw_df["lead_type"] != "noise") &
+        (raw_df["competitor_mentioned"] != "none")
+    ]
+    comp_leads = (
+        comp_signal.groupby("competitor_mentioned")["lead_id"]
+        .nunique()
+        .reset_index(name="leads")
+    )
+    comp_comments = (
+        comp_signal.groupby("competitor_mentioned")
+        .size()
+        .reset_index(name="comments")
+    )
+    comp_top_pain = (
+        comp_signal.groupby("competitor_mentioned")["pain_point_category"]
+        .agg(lambda x: x.mode()[0] if len(x) else "—")
+        .reset_index(name="top_pain_point")
+    )
+    comp_table = (
+        comp_leads
+        .merge(comp_comments, on="competitor_mentioned")
+        .merge(comp_top_pain, on="competitor_mentioned")
+        .sort_values("leads", ascending=False)
+        .rename(columns={"competitor_mentioned": "Competitor"})
+        .reset_index(drop=True)
+    )
+    comp_table.insert(0, "#", comp_table.index + 1)
+
+    cb_left, cb_right = st.columns([1, 1])
+
+    with cb_left:
+        st.dataframe(
+            comp_table,
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "#":              st.column_config.NumberColumn("#",            width="small"),
+                "Competitor":     st.column_config.TextColumn("Competitor"),
+                "leads":          st.column_config.NumberColumn("Unique Leads", format="%d"),
+                "comments":       st.column_config.NumberColumn("Comments",     format="%d"),
+                "top_pain_point": st.column_config.TextColumn("Top Pain Point"),
+            },
+        )
+
+    with cb_right:
+        bar = go.Figure(go.Bar(
+            x=comp_table["leads"],
+            y=comp_table["Competitor"],
+            orientation="h",
+            marker_color="#e74c3c",
+            text=comp_table["leads"],
+            textposition="outside",
+        ))
+        bar.update_layout(
+            xaxis=dict(title="Unique Leads"),
+            yaxis=dict(autorange="reversed"),
+            height=max(200, len(comp_table) * 38),
+            margin=dict(l=10, r=50, t=10, b=30),
+        )
+        st.plotly_chart(bar, use_container_width=True)
+
 # ── Lead-centric table ────────────────────────────────────────────────────────
 display = filtered[[
     "rank", "username", "lead_type", "competitor_mentioned",
