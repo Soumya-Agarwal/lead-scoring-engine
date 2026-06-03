@@ -442,7 +442,6 @@ if selected_rows:
                 break
         if draft:
             st.info(draft)
-            st.code(draft, language=None)
         else:
             st.caption("No outreach draft yet — run `src/outreach.py` with a real HF_API_KEY.")
 
