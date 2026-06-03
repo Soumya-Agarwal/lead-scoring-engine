@@ -244,6 +244,7 @@ st.markdown(f"**{len(filtered)} leads** match your filters")
 # ── Competitor breakdown ──────────────────────────────────────────────────────
 with st.expander("📊 Competitor Breakdown", expanded=True):
     comp_signal = raw_df[
+        raw_df["lead_id"].isin(filtered["lead_id"]) &
         (raw_df["lead_type"] != "noise") &
         (raw_df["competitor_mentioned"] != "none")
     ]
