@@ -134,13 +134,42 @@ st.divider()
 
 # ── Sidebar filters ───────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("Filters")
+    st.header("🔍 Filters")
+
+    # ── Search ────────────────────────────────────────────────────────────────
+    username_search = st.text_input(
+        "Search Username",
+        placeholder="e.g. coastal_brand",
+        help="Partial match — case-insensitive",
+    )
+
+    st.divider()
+    st.subheader("Lead Quality")
 
     tier_filter = st.multiselect(
         "Lead Tier",
         options=["hot", "warm", "cold"],
         default=["hot", "warm", "cold"],
+        format_func=lambda t: f"{TIER_EMOJI.get(t, '')} {t.capitalize()}",
     )
+
+    score_min, score_max = st.slider(
+        "Best Score Range",
+        min_value=0.0, max_value=10.0,
+        value=(1.0, 10.0), step=0.5,
+        help="Filter by the lead's highest composite score",
+    )
+
+    max_days = int(leads_df["days_suffering"].max()) if len(leads_df) else 90
+    days_min, days_max = st.slider(
+        "Days Active (days since first post)",
+        min_value=0, max_value=max_days,
+        value=(0, max_days),
+        help="How long the lead has been publicly complaining",
+    )
+
+    st.divider()
+    st.subheader("Competitor & Pain Point")
 
     competitor_options = sorted(
         [c for c in leads_df["competitor_mentioned"].dropna().unique() if c != "none"]
@@ -158,6 +187,9 @@ with st.sidebar:
         default=pain_options,
     )
 
+    st.divider()
+    st.subheader("Lead Type & Activity")
+
     type_options = sorted(leads_df["lead_type"].dropna().unique().tolist())
     type_filter = st.multiselect(
         "Lead Type",
@@ -165,17 +197,35 @@ with st.sidebar:
         default=type_options,
     )
 
-    min_score = st.slider(
-        "Min Best Score",
-        min_value=1.0, max_value=10.0, value=1.0, step=0.5,
+    min_comments = st.slider(
+        "Min Number of Posts",
+        min_value=1, max_value=int(leads_df["total_comments"].max()) if len(leads_df) else 4,
+        value=1, step=1,
+        help="Only show leads with at least this many posts",
     )
 
     st.divider()
-    st.subheader("Escalation Filters")
+    st.subheader("Quick Filters")
 
-    recent_only = st.checkbox("Hot this week only", value=False)
-    escalating_only = st.checkbox("3+ comments only 🔥", value=False,
-                                  help="Show only leads who have escalated to 3 or more posts")
+    recent_only = st.checkbox(
+        "🟢 Hot this week only",
+        value=False,
+        help="Leads with at least one comment in the last 7 days",
+    )
+    escalating_only = st.checkbox(
+        "🔥 3+ comments only",
+        value=False,
+        help="Show only leads who have escalated to 3 or more posts",
+    )
+    has_outreach = st.checkbox(
+        "✉️ Has outreach draft",
+        value=False,
+        help="Leads where an outreach message has been generated",
+    )
+
+    st.divider()
+    if st.button("Reset all filters", use_container_width=True):
+        st.rerun()
 
 # ── Apply filters ─────────────────────────────────────────────────────────────
 filtered = leads_df[
@@ -183,13 +233,28 @@ filtered = leads_df[
     leads_df["competitor_mentioned"].isin(competitor_filter) &
     leads_df["pain_point_category"].isin(pain_filter) &
     leads_df["lead_type"].isin(type_filter) &
-    (leads_df["best_score"] >= min_score)
+    (leads_df["best_score"] >= score_min) &
+    (leads_df["best_score"] <= score_max) &
+    (leads_df["total_comments"] >= min_comments) &
+    (leads_df["days_suffering"] >= days_min) &
+    (leads_df["days_suffering"] <= days_max)
 ].copy()
 
+if username_search.strip():
+    filtered = filtered[
+        filtered["username"].str.contains(username_search.strip(), case=False, na=False)
+    ]
 if recent_only:
     filtered = filtered[filtered["any_recent"] == True]
 if escalating_only:
     filtered = filtered[filtered["escalating"] == True]
+if has_outreach:
+    # Join back to raw_df to check if the best-scoring comment has a draft
+    lead_drafts = (
+        raw_df[raw_df["outreach_draft"].astype(str).str.strip() != ""]
+        ["lead_id"].unique()
+    )
+    filtered = filtered[filtered["lead_id"].isin(lead_drafts)]
 
 st.markdown(f"**{len(filtered)} leads** match your filters")
 
