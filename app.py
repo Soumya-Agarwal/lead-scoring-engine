@@ -141,7 +141,8 @@ with st.sidebar:
     tier_filter = st.multiselect(
         "Lead Tier",
         options=["hot", "warm", "cold"],
-        default=["hot", "warm", "cold"],
+        default=[],
+        placeholder="All tiers",
         format_func=lambda t: f"{TIER_EMOJI.get(t, '')} {t.capitalize()}",
     )
 
@@ -162,14 +163,16 @@ with st.sidebar:
     competitor_filter = st.multiselect(
         "Competitor Mentioned",
         options=competitor_options + ["none"],
-        default=competitor_options + ["none"],
+        default=[],
+        placeholder="All competitors",
     )
 
     pain_options = sorted(leads_df["pain_point_category"].dropna().unique().tolist())
     pain_filter = st.multiselect(
         "Pain Point",
         options=pain_options,
-        default=pain_options,
+        default=[],
+        placeholder="All pain points",
     )
 
     st.divider()
@@ -179,7 +182,8 @@ with st.sidebar:
     type_filter = st.multiselect(
         "Lead Type",
         options=type_options,
-        default=type_options,
+        default=[],
+        placeholder="All types",
     )
 
     min_comments = st.slider(
@@ -214,10 +218,10 @@ with st.sidebar:
 
 # ── Apply filters ─────────────────────────────────────────────────────────────
 filtered = leads_df[
-    leads_df["lead_tier"].isin(tier_filter) &
-    leads_df["competitor_mentioned"].isin(competitor_filter) &
-    leads_df["pain_point_category"].isin(pain_filter) &
-    leads_df["lead_type"].isin(type_filter) &
+    (leads_df["lead_tier"].isin(tier_filter)               if tier_filter        else True) &
+    (leads_df["competitor_mentioned"].isin(competitor_filter) if competitor_filter else True) &
+    (leads_df["pain_point_category"].isin(pain_filter)     if pain_filter        else True) &
+    (leads_df["lead_type"].isin(type_filter)               if type_filter        else True) &
     (leads_df["total_comments"] >= min_comments) &
     (leads_df["days_suffering"] >= days_min) &
     (leads_df["days_suffering"] <= days_max)
