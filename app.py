@@ -116,7 +116,17 @@ c1, c2, c3, c4 = st.columns(4)
 c1.metric("Total Leads",               len(leads_df))
 c2.metric("Hot Leads This Week 🔴",    hot_this_week,    help="Hot leads with at least one comment in the last 7 days")
 c3.metric("Leads with 3+ Comments 🔥", escalating,       help="Leads who have posted 3 or more times — highest switching intent")
-c4.metric(f"#{1} Competitor ({top_comp_count} mentions)", top_comp_name,  help="Competitor mentioned most across all comments")
+c4.markdown(
+    f"""
+    <div style="padding:4px 0px">
+        <p style="font-size:0.85rem;color:#888;margin:0">Top Competitor Mentioned</p>
+        <p style="font-size:1.1rem;font-weight:600;margin:4px 0 0 0">{top_comp_name}
+            <span style="font-size:0.85rem;font-weight:400;color:#888">({top_comp_count} mentions)</span>
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
