@@ -277,6 +277,6 @@ else:
 st.divider()
 st.markdown(
     "Built with **HuggingFace Inference API** · **Streamlit** · **Python** &nbsp;|&nbsp; "
-    "[GitHub](https://github.com/your-username/lead-scoring-engine) &nbsp;|&nbsp; "
+    "[GitHub](https://github.com/Soumya-Agarwal/lead-scoring-engine) &nbsp;|&nbsp; "
     "Phase 1 of 3"
 )

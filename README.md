@@ -2,6 +2,8 @@
 
 AI pipeline that scores fulfillment leads by switching intent using prompt engineering and LLMs.
 
+🚀 **[Live Demo → lead-scoring-engine-demo.streamlit.app](https://lead-scoring-engine-demo.streamlit.app/)**
+
 ## Architecture
 
 ```
@@ -57,7 +59,7 @@ Instagram Comments (mock data)
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/lead-scoring-engine.git
+git clone https://github.com/Soumya-Agarwal/lead-scoring-engine.git
 cd lead-scoring-engine
 
 # 2. Create a virtual environment and install dependencies
@@ -112,4 +114,6 @@ No API keys are stored in this repository. See `.env.example` for required keys.
 
 ## Live Demo
 
-_Add link after deployment to Streamlit Community Cloud_
+🚀 **[https://lead-scoring-engine-demo.streamlit.app/](https://lead-scoring-engine-demo.streamlit.app/)**
+
+Built and deployed June 2026. Public demo runs on synthetic data (500 comments · 194 leads).
