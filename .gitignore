@@ -1,0 +1,35 @@
+# Secrets — never commit these
+.env
+*.env
+.streamlit/secrets.toml
+
+# Data — never commit raw or classified real data
+data/raw/
+data/processed/classified_leads.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
