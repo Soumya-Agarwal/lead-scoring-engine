@@ -2,6 +2,7 @@ faker==24.11.0
 pandas>=2.2.2
 requests==2.32.3
 python-dotenv==1.0.1
-streamlit==1.35.0
+streamlit>=1.35.0
 plotly==5.22.0
 pytest==8.2.2
+pillow>=11.0.0
