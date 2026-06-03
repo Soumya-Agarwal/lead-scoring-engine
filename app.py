@@ -25,7 +25,7 @@ DOW_NAMES   = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
-@st.cache_data
+@st.cache_data(ttl=0)
 def load_raw() -> pd.DataFrame:
     path = DATA_PATH if os.path.exists(DATA_PATH) else FALLBACK_PATH
     df = pd.read_csv(path)
@@ -432,10 +432,15 @@ if selected_rows:
             )
             st.plotly_chart(fig2, width="stretch")
 
-        # Outreach draft from best comment
+        # Outreach draft — walk all comments for this lead, pick first non-empty draft
         st.markdown("##### ✉️ Outreach Draft")
-        draft = str(best_comment.get("outreach_draft", ""))
-        if draft and draft.strip():
+        draft = ""
+        for _, _c in all_comments.sort_values("composite_score", ascending=False).iterrows():
+            _d = str(_c["outreach_draft"]).strip()
+            if _d and _d.lower() not in ("nan", "none", ""):
+                draft = _d
+                break
+        if draft:
             st.info(draft)
             st.code(draft, language=None)
         else:
