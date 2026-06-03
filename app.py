@@ -112,21 +112,23 @@ top_competitor = raw_df[raw_df["competitor_mentioned"] != "none"]["competitor_me
 top_comp_name  = top_competitor.index[0] if len(top_competitor) else "—"
 top_comp_count = int(top_competitor.iloc[0]) if len(top_competitor) else 0
 
+def metric_card(col, label: str, value: str, sub: str = ""):
+    col.markdown(
+        f"""
+        <div style="background:#f8f9fa;border-radius:8px;padding:16px 20px;height:90px;">
+            <p style="font-size:0.78rem;color:#888;margin:0;text-transform:uppercase;letter-spacing:0.04em">{label}</p>
+            <p style="font-size:1.35rem;font-weight:700;margin:6px 0 0 0;line-height:1.2">{value}</p>
+            {f'<p style="font-size:0.75rem;color:#aaa;margin:2px 0 0 0">{sub}</p>' if sub else ''}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Total Leads",               len(leads_df))
-c2.metric("Hot Leads This Week 🔴",    hot_this_week,    help="Hot leads with at least one comment in the last 7 days")
-c3.metric("Leads with 3+ Comments 🔥", escalating,       help="Leads who have posted 3 or more times — highest switching intent")
-c4.markdown(
-    f"""
-    <div style="padding:4px 0px">
-        <p style="font-size:0.85rem;color:#888;margin:0">Top Competitor Mentioned</p>
-        <p style="font-size:1.1rem;font-weight:600;margin:4px 0 0 0">{top_comp_name}
-            <span style="font-size:0.85rem;font-weight:400;color:#888">({top_comp_count} mentions)</span>
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+metric_card(c1, "Total Leads",               str(len(leads_df)))
+metric_card(c2, "Hot Leads This Week 🔴",    str(hot_this_week),  "with a comment in the last 7 days")
+metric_card(c3, "Leads with 3+ Comments 🔥", str(escalating),     "escalating — highest switching intent")
+metric_card(c4, "Top Competitor Mentioned",  top_comp_name,       f"{top_comp_count} mentions across all comments")
 
 st.divider()
 
