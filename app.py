@@ -136,14 +136,6 @@ st.divider()
 with st.sidebar:
     st.header("🔍 Filters")
 
-    # ── Search ────────────────────────────────────────────────────────────────
-    username_search = st.text_input(
-        "Search Username",
-        placeholder="e.g. coastal_brand",
-        help="Partial match — case-insensitive",
-    )
-
-    st.divider()
     st.subheader("Lead Quality")
 
     tier_filter = st.multiselect(
@@ -240,10 +232,6 @@ filtered = leads_df[
     (leads_df["days_suffering"] <= days_max)
 ].copy()
 
-if username_search.strip():
-    filtered = filtered[
-        filtered["username"].str.contains(username_search.strip(), case=False, na=False)
-    ]
 if recent_only:
     filtered = filtered[filtered["any_recent"] == True]
 if escalating_only:
